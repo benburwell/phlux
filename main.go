@@ -23,7 +23,7 @@ func main() {
 	}
 }
 
-func updateBridge(bridge hue.Bridge, desiredColorTemp ColorTemperature) {
+func updateBridge(bridge hue.Bridge, ct ColorTemperature) {
 	//username, err := bridge.CreateUser(username)
 	//if err != nil {
 	//	panic("Could not create user on bridge")
@@ -40,15 +40,19 @@ func updateBridge(bridge hue.Bridge, desiredColorTemp ColorTemperature) {
 	}
 	log.Printf("Found %d lights\n", len(lights))
 	for _, light := range lights {
-		log.Printf("Light %d: %s (%s)\n", light.Index, light.Name, light.Type)
-		if supportsColorTemp(light) {
-			log.Printf("  CT range: %d-%d\n", light.Capabilities.Control.CT.Min, light.Capabilities.Control.CT.Max)
-			newCt := translateCtForLight(desiredColorTemp, light)
-			log.Printf("  Setting CT to %d\n", newCt)
-			light.SetState(hue.LightState{
-				On: light.State.On,
-				CT: newCt,
-			})
-		}
+		updateLight(light, ct)
+	}
+}
+
+func updateLight(light hue.Light, ct ColorTemperature) {
+	log.Printf("Light %d: %s (%s)\n", light.Index, light.Name, light.Type)
+	if supportsColorTemp(light) {
+		log.Printf("  CT range: %d-%d\n", light.Capabilities.Control.CT.Min, light.Capabilities.Control.CT.Max)
+		newCt := ct.TranslateForLight(light)
+		log.Printf("  Setting CT to %d\n", newCt)
+		light.SetState(hue.LightState{
+			On: light.State.On,
+			CT: newCt,
+		})
 	}
 }

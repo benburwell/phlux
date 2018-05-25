@@ -43,7 +43,7 @@ func getDesiredColorTemperature(t time.Time) ColorTemperature {
 //   500 <=> 2000K
 //   =============
 //   347     4500
-func translateCtForLight(ct ColorTemperature, light hue.Light) uint16 {
+func (ct ColorTemperature) TranslateForLight(light hue.Light) uint16 {
 	divisor := 12.968
 	scaled := float64(ct) / divisor
 	inverted := 500 - scaled + 153
