@@ -11,7 +11,7 @@
   branch = "master"
   name = "github.com/benburwell/gohue"
   packages = ["."]
-  revision = "9baef1639cd3efb39b003b76d618a70757a414b4"
+  revision = "32d8e201749f37fda7607408ae3d89d58ebf685f"
 
 [[projects]]
   branch = "master"

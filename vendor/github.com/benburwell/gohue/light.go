@@ -28,6 +28,23 @@ type Light struct {
 		ColorMode  string     `json:"colormode"` // HS or XY mode for choosing color
 		Reachable  bool       `json:"reachable"`
 	} `json:"state"`
+	Capabilities struct {
+		Certified bool `json:"certified,omitempty"`
+		Control   struct {
+			MinDimLevel    uint16       `json:"mindimlevel,omitempty"`
+			MaxLumen       uint16       `json:"maxlumen,omitempty"`
+			ColorGamutType string       `json:"colorgamuttype,omitempty"`
+			ColorGamut     [][2]float32 `json:"colorgamut,omitempty"`
+			CT             struct {
+				Min uint16 `json:"min,omitempty"`
+				Max uint16 `json:"max,omitempty"`
+			} `json:"ct,omitempty"`
+		} `json:"control,omitempty"`
+		Streaming struct {
+			Renderer bool `json:"renderer,omitempty"`
+			Proxy    bool `json:"proxy,omitempty"`
+		} `json:"streaming,omitempty"`
+	} `json:"capabilities,omitempty"`
 	Type             string  `json:"type"`
 	Name             string  `json:"name"`
 	ModelID          string  `json:"modelid"`
