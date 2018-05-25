@@ -19,6 +19,7 @@ func main() {
 	flag.Float64Var(&config.Latitude, "latitude", config.Latitude, "Latitude (used to calculate sunrise and sunset)")
 	flag.Float64Var(&config.Longitude, "longitude", config.Longitude, "Longitude (used to calculate sunrise and sunset)")
 	flag.Int64Var(&config.Interval, "interval", config.Interval, "Interval (in seconds) at which to run the update if --forever is set")
+	flag.StringVar(&config.TransitionTime, "transitionTime", config.TransitionTime, "Transition time for adjusting the color temperature")
 	forever := flag.Bool("forever", false, "Run the update every [interval], use Ctrl-C to cancel")
 	flag.Parse()
 
@@ -107,20 +108,21 @@ func updateBridge(bridge *hue.Bridge, ct ColorTemperature, config *PhluxConfig) 
 	}
 	log.Printf("Found %d lights\n", len(lights))
 	for _, light := range lights {
-		updateLight(light, ct)
+		updateLight(light, ct, config)
 	}
 	return nil
 }
 
-func updateLight(light hue.Light, ct ColorTemperature) {
+func updateLight(light hue.Light, ct ColorTemperature, config *PhluxConfig) {
 	log.Printf("Light %d: %s (%s)\n", light.Index, light.Name, light.Type)
 	if supportsColorTemp(light) {
 		log.Printf("  CT range: %d-%d\n", light.Capabilities.Control.CT.Min, light.Capabilities.Control.CT.Max)
 		newCt := ct.TranslateForLight(light)
 		log.Printf("  Setting CT to %d\n", newCt)
 		light.SetState(hue.LightState{
-			On: light.State.On,
-			CT: newCt,
+			On:             light.State.On,
+			CT:             newCt,
+			TransitionTime: config.TransitionTime,
 		})
 	}
 }
