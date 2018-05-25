@@ -11,12 +11,16 @@ import (
 const username = "phlux"
 
 func main() {
+	var config PhluxConfig
+	config.Read()
+	log.Println("Config:", config)
+
 	bridges, err := hue.FindBridges()
 	if err != nil {
 		log.Fatalf("Error finding bridges: %s\n", err.Error())
 	}
 	log.Printf("Found %d bridge(s)\n", len(bridges))
-	desiredColorTemp := getDesiredColorTemperature(time.Now())
+	desiredColorTemp := getDesiredColorTemperature(time.Now(), config.Latitude, config.Longitude)
 	for _, bridge := range bridges {
 		log.Printf("Bridge: %s\n", bridge.IPAddress)
 		updateBridge(bridge, desiredColorTemp)
@@ -31,9 +35,17 @@ func updateBridge(bridge hue.Bridge, ct ColorTemperature) {
 	//fmt.Printf("Made user %s for bridge %s\n", username, bridge.IPAddress)
 	err := bridge.Login(os.Getenv("HUE_LOGIN"))
 	if err != nil {
-		log.Fatalf("Could not log in to bridge: %s", err.Error())
+		log.Fatalf("Could not log in to bridge: %s\n", err.Error())
 	}
 	log.Println("Logged in to bridge")
+
+	config, err := bridge.GetConfig()
+	if err != nil {
+		log.Fatalf("Could not get bridge info: %s\n", err.Error())
+	}
+	log.Printf("Bridge name: %s\n", config.Name)
+	log.Printf("Bridge ID: %s\n", config.BridgeID)
+
 	lights, err := bridge.GetAllLights()
 	if err != nil {
 		log.Fatalf("Error getting lights: %s\n", err.Error())

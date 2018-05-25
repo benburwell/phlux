@@ -11,18 +11,15 @@ import (
 
 type ColorTemperature uint
 
-const LATITUDE = 42.348333
-const LONGITUDE = 71.1675
-
 // Get the correct color temperature for a given time. If the time is between
 // sunrise and sunset, a high CT is selected. Otherise, during night, a low
 // color temperature is used.
 //
 // TODO: This is a naive approach and should be revisited
-func getDesiredColorTemperature(t time.Time) ColorTemperature {
+func getDesiredColorTemperature(t time.Time, latitude, longitude float64) ColorTemperature {
 	log.Printf("Calculating sunrise/sunset for: %s\n", t.Format(time.RFC3339))
-	sunrise := astrotime.CalcSunrise(t, LATITUDE, LONGITUDE)
-	sunset := astrotime.CalcSunset(t, LATITUDE, LONGITUDE)
+	sunrise := astrotime.CalcSunrise(t, latitude, longitude)
+	sunset := astrotime.CalcSunset(t, latitude, longitude)
 	log.Printf("Sunrise: %s, Sunset: %s\n", sunrise.Format(time.RFC3339), sunset.Format(time.RFC3339))
 	if t.After(sunrise) && t.Before(sunset) {
 		log.Println("Daytime, setting high CT")
