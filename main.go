@@ -2,6 +2,7 @@ package main
 
 import (
 	"errors"
+	"flag"
 	"fmt"
 	"log"
 	"time"
@@ -14,8 +15,26 @@ const USERNAME = "phlux"
 func main() {
 	var config PhluxConfig
 	config.Read()
+
+	flag.Float64Var(&config.Latitude, "latitude", config.Latitude, "Latitude (used to calculate sunrise and sunset)")
+	flag.Float64Var(&config.Longitude, "longitude", config.Longitude, "Longitude (used to calculate sunrise and sunset)")
+	flag.Int64Var(&config.Interval, "interval", config.Interval, "Interval (in seconds) at which to run the update if --forever is set")
+	forever := flag.Bool("forever", false, "Run the update every [interval], use Ctrl-C to cancel")
+	flag.Parse()
+
 	log.Println("Config:", config)
 
+	updateColorTemps(&config)
+	if *forever {
+		ticker := time.NewTicker(time.Duration(config.Interval) * time.Second)
+		for {
+			<-ticker.C
+			updateColorTemps(&config)
+		}
+	}
+}
+
+func updateColorTemps(config *PhluxConfig) {
 	bridges, err := hue.FindBridges()
 	if err != nil {
 		log.Fatalf("Error finding bridges: %s\n", err.Error())
@@ -24,7 +43,7 @@ func main() {
 	desiredColorTemp := getDesiredColorTemperature(time.Now(), config.Latitude, config.Longitude)
 	for _, bridge := range bridges {
 		log.Printf("Bridge: %s\n", bridge.IPAddress)
-		updateBridge(&bridge, desiredColorTemp, &config)
+		updateBridge(&bridge, desiredColorTemp, config)
 	}
 }
 
@@ -71,22 +90,26 @@ func authenticate(bridge *hue.Bridge, config *PhluxConfig) error {
 	}
 	err = bridge.Login(token)
 	if err != nil {
-		log.Fatalf("Could not log in to bridge: %s\n", err.Error())
+		return errors.New(fmt.Sprintf("Could not log in to bridge: %s", err.Error()))
 	}
-	log.Println("Logged in to bridge")
 	return nil
 }
 
-func updateBridge(bridge *hue.Bridge, ct ColorTemperature, config *PhluxConfig) {
-	authenticate(bridge, config)
+func updateBridge(bridge *hue.Bridge, ct ColorTemperature, config *PhluxConfig) error {
+	err := authenticate(bridge, config)
+	if err != nil {
+		return err
+	}
+	log.Println("Logged in to bridge")
 	lights, err := bridge.GetAllLights()
 	if err != nil {
-		log.Fatalf("Error getting lights: %s\n", err.Error())
+		return errors.New(fmt.Sprintf("Error getting lights: %s", err.Error()))
 	}
 	log.Printf("Found %d lights\n", len(lights))
 	for _, light := range lights {
 		updateLight(light, ct)
 	}
+	return nil
 }
 
 func updateLight(light hue.Light, ct ColorTemperature) {

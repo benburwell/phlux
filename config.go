@@ -20,6 +20,7 @@ type BridgeConfig struct {
 type PhluxConfig struct {
 	Latitude  float64        `yaml:"latitude"`
 	Longitude float64        `yaml:"longitude"`
+	Interval  int64          `yaml:"interval"`
 	Bridges   []BridgeConfig `yaml:"bridges"`
 }
 
